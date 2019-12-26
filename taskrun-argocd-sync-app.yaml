@@ -1,0 +1,8 @@
+apiVersion: tekton.dev/v1alpha1
+kind: TaskRun
+metadata:
+  generateName: argocd-login-taskrun-
+  namespace: default
+spec:
+  taskRef:
+    name: argocd-sync-app-task

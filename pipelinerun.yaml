@@ -1,0 +1,30 @@
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineRun
+metadata:
+  generateName: bootstrap-microservices-pipelinerun-
+spec:
+  pipelineRef:
+    name: bootstrap-microservices-pipeline
+  params:
+    - name: redis
+      value: "redis"
+    - name: cart
+      value: "cartservice"
+    - name: productcatalog
+      value: "productcatalogservice"
+    - name: recommendation
+      value: "recommendationservice"
+    - name: "ad"
+      value: "adservice"
+    - name: "email"
+      value: "emailservice"
+    - name: "payment"
+      value: "paymentservice"
+    - name: "shipping"
+      value: "shippingservice"
+    - name: "currency"
+      value: "currencyservice"
+    - name: "checkout"
+      value: "checkoutservice"
+    - name: "frontend"
+      value: "frontend"

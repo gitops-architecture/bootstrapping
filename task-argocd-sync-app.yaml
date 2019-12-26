@@ -1,0 +1,77 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: argocd-sync-app-task
+spec:
+  inputs:
+    params:
+      - name: argocdVersion
+        description: the version of argocd image tag
+        type: string
+        default: v1.0.2
+      - name: argocdServer
+        type: string
+        description: ArgoCD servername (and optinally port)
+        default: DOMAIN_OR_IP
+      - name: username
+        type: string
+        description: ArgoCD admin username
+        default: admin
+      - name: password
+        type: string
+        description: ArgoCD admin password
+        default: ARGOCD_ADMIN_PASSSWORD
+      - name: githubAccount
+        type: string
+        description: the name of the github account
+        default: gitops-architecture
+      - name: serviceName
+        type: string
+        description: the name of the microservice
+      - name: githubUsername
+        type: string
+        default: YOUR_GITHUB_USERNAME
+        description: the username of github repo
+      - name: githubPassword
+        type: string
+        default: YOUR_GITHUB_PASSWORD
+        description: the password of github repo
+  steps:
+    - name: login
+      image: argoproj/argocd:$(inputs.params.argocdVersion)
+      command:
+        - bash
+        - -c
+        - argocd login $(inputs.params.argocdServer) --username $(inputs.params.username) --password $(inputs.params.password) --insecure
+    - name: create-repo-connection
+      image: argoproj/argocd:$(inputs.params.argocdVersion)
+      command:
+        - bash
+        - -c
+        - | 
+           argocd repo add https://github.com/$(inputs.params.githubAccount)/$(inputs.params.serviceName)-config.git \
+            --username $(inputs.params.githubUsername) \
+            --password $(inputs.params.githubPassword)  
+    - name: create-app
+      image: argoproj/argocd:$(inputs.params.argocdVersion)
+      command:
+        - bash
+        - -c
+        - |
+           argocd app create $(inputs.params.serviceName) \
+            --repo https://github.com/$(inputs.params.githubAccount)/$(inputs.params.serviceName)-config.git \
+            --name $(inputs.params.serviceName) \
+            --path \/$(inputs.params.serviceName) \
+            --sync-policy automated \
+            --auto-prune \
+            --dest-server https://kubernetes.default.svc \
+            --dest-namespace default \
+            --values values.yaml
+    - name: wait
+      image: argoproj/argocd:$(inputs.params.argocdVersion)
+      command:
+        - bash
+        - -c
+        - |
+           argocd app wait $(inputs.params.serviceName) --health
+        

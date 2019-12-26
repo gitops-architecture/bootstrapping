@@ -1,0 +1,125 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Pipeline
+metadata:
+  name: bootstrap-microservices-pipeline
+spec:
+  params:
+    - name: redis
+      type: string
+      description: the redis service
+    - name: cart
+      type: string
+      description: the cart service 
+    - name: ad
+      type: string
+      description: the ad service
+    - name: email
+      type: string
+      description: the email service
+    - name: payment
+      type: string
+      description: the payment service
+    - name: productcatalog
+      type: string
+      description: the productcatalog service 
+    - name: recommendation
+      type: string
+      description: the recommendation service
+    - name: shipping
+      type: string
+      description: the shipping service 
+    - name: currency
+      type: string
+      description: the currency service
+    - name: checkout
+      type: string
+      description: the checkout service
+    - name: frontend
+      type: string
+      description: the frontend web app   
+  tasks:
+    - name: create-redis-app
+      taskRef:
+        name: argocd-sync-app-task
+      params:
+        - name: serviceName
+          value: $(params.redis)
+    - name: create-cartservice-app
+      taskRef:
+        name: argocd-sync-app-task
+      runAfter:
+        - create-redis-app
+      params:
+        - name: serviceName
+          value: $(params.cart)
+    - name: create-adservice-app
+      taskRef:
+        name: argocd-sync-app-task
+      params:
+        - name: serviceName
+          value: $(params.ad)
+    - name: create-emailservice-app
+      taskRef:
+        name: argocd-sync-app-task
+      params:
+        - name: serviceName
+          value: $(params.email)
+    - name: create-paymentservice-app
+      taskRef:
+        name: argocd-sync-app-task
+      params:
+        - name: serviceName
+          value: $(params.payment)
+    - name: create-shippingservice-app
+      taskRef:
+        name: argocd-sync-app-task
+      params:
+        - name: serviceName
+          value: $(params.shipping)
+    - name: create-productcatalog-app
+      taskRef:
+        name: argocd-sync-app-task
+      params:
+        - name: serviceName
+          value: $(params.productcatalog)
+    - name: create-recommendation-app
+      taskRef:
+        name: argocd-sync-app-task
+      runAfter:
+        - create-productcatalog-app
+      params:
+        - name: serviceName
+          value: $(params.recommendation)
+    - name: create-currency-app
+      taskRef:
+        name: argocd-sync-app-task
+      params:
+        - name: serviceName
+          value: $(params.currency)
+    - name: create-checkout-app
+      taskRef:
+        name: argocd-sync-app-task
+      runAfter:
+        - create-productcatalog-app
+        - create-currency-app
+        - create-shippingservice-app
+        - create-paymentservice-app
+        - create-emailservice-app
+        - create-cartservice-app
+      params:
+        - name: serviceName
+          value: $(params.checkout)
+    - name: create-frontend-app
+      taskRef:
+        name: argocd-sync-app-task
+      runAfter:
+        - create-recommendation-app
+        - create-productcatalog-app
+        - create-currency-app
+        - create-shippingservice-app
+        - create-cartservice-app
+        - create-adservice-app
+        - create-checkout-app
+      params:
+        - name: serviceName
+          value: $(params.frontend)
